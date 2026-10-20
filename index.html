@@ -94,6 +94,26 @@
       margin-left: 4px;
     }
 
+    .mode-badge {
+      display: inline-block;
+      font-size: 9px;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      font-weight: 800;
+      padding: 2px 7px;
+      border-radius: 9999px;
+      background: #0f172a;
+      border: 1px solid #38bdf8;
+      color: #38bdf8;
+      margin-bottom: 2px;
+    }
+
+    .mode-badge.daily {
+      border-color: #f59e0b;
+      color: #fbbf24;
+      background: rgba(245, 158, 11, 0.12);
+    }
+
     /* Screen Overlays */
     .screen-overlay {
       position: absolute;
@@ -137,6 +157,55 @@
       margin-bottom: 30px;
     }
 
+    /* Mode Selector Segmented Tabs */
+    .mode-selector {
+      display: flex;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid #334155;
+      padding: 4px;
+      border-radius: 9999px;
+      margin-bottom: 22px;
+      gap: 4px;
+      max-width: 320px;
+      width: 100%;
+    }
+
+    .mode-tab {
+      flex: 1;
+      padding: 8px 12px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: #94a3b8;
+      background: transparent;
+      border: none;
+      border-radius: 9999px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .mode-tab.active {
+      background: #0284c7;
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(2, 132, 199, 0.5);
+    }
+
+    .mode-tab.active.daily-active {
+      background: linear-gradient(135deg, #d97706, #ea580c);
+      color: #ffffff;
+      box-shadow: 0 0 12px rgba(234, 88, 12, 0.6);
+    }
+
+    .daily-subtext {
+      font-size: 11px;
+      color: #fbbf24;
+      letter-spacing: 0.5px;
+      margin-top: -16px;
+      margin-bottom: 18px;
+      font-weight: 600;
+    }
+
     /* Action Buttons */
     .btn {
       position: relative;
@@ -153,7 +222,7 @@
       box-shadow: 0 0 20px rgba(14, 165, 233, 0.5);
       transition: transform 0.15s ease, box-shadow 0.15s ease;
       outline: none;
-      margin: 8px 0;
+      margin: 6px 0;
     }
 
     .btn:active {
@@ -174,14 +243,54 @@
       background: #334155;
     }
 
+    .btn-share {
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      box-shadow: 0 0 16px rgba(139, 92, 246, 0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 11px 26px;
+      font-size: 13px;
+      width: 100%;
+      max-width: 320px;
+    }
+
     .btn-rewarded {
       background: linear-gradient(135deg, #10b981, #06b6d4);
       box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
       display: flex;
       align-items: center;
+      justify-content: center;
       gap: 8px;
-      padding: 12px 28px;
-      font-size: 14px;
+      padding: 11px 28px;
+      font-size: 13px;
+      width: 100%;
+      max-width: 320px;
+    }
+
+    /* Toast Notification for Clipboard Copy */
+    #copy-toast {
+      position: absolute;
+      bottom: 24px;
+      background: #10b981;
+      color: #ffffff;
+      padding: 8px 18px;
+      border-radius: 9999px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      box-shadow: 0 0 16px rgba(16, 185, 129, 0.6);
+      pointer-events: none;
+      opacity: 0;
+      transform: translateY(10px);
+      transition: all 0.25s ease;
+      z-index: 50;
+    }
+
+    #copy-toast.show {
+      opacity: 1;
+      transform: translateY(0);
     }
 
     /* Score stats board */
@@ -189,10 +298,10 @@
       background: rgba(15, 23, 42, 0.7);
       border: 1px solid #1e293b;
       border-radius: 12px;
-      padding: 16px 24px;
+      padding: 14px 18px;
       width: 100%;
       max-width: 320px;
-      margin-bottom: 20px;
+      margin-bottom: 14px;
       display: flex;
       justify-content: space-around;
     }
@@ -296,14 +405,17 @@
     <!-- In-Game Head-up Display -->
     <div id="hud">
       <div class="hud-stat">
-        <span class="stat-label">Score</span>
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="stat-label">Score</span>
+          <span id="hud-mode-badge" class="mode-badge">Endless</span>
+        </div>
         <div style="display: flex; align-items: baseline;">
           <span id="hud-score" class="stat-val">0</span>
           <span id="hud-mult" class="multiplier-tag">x1</span>
         </div>
       </div>
       <div class="hud-stat" style="align-items: flex-end;">
-        <span class="stat-label">High Score</span>
+        <span class="stat-label" id="hud-best-label">Best Endless</span>
         <span id="hud-best" class="stat-val" style="color: #cbd5e1;">0</span>
       </div>
     </div>
@@ -313,6 +425,16 @@
       <h1 class="title">Echo Orbit</h1>
       <p class="subtitle">GRAVITATIONAL PULSE DRIFT</p>
       
+      <!-- Mode Toggle -->
+      <div class="mode-selector">
+        <button id="tab-endless" class="mode-tab active" type="button">Classic Endless</button>
+        <button id="tab-daily" class="mode-tab" type="button">Daily Challenge</button>
+      </div>
+
+      <div id="daily-info-text" class="daily-subtext" style="display: none;">
+        SEED: <span id="daily-date-label"></span> // EQUAL ORBIT FOR ALL
+      </div>
+
       <button id="btn-start" class="btn">Launch Orbit</button>
       
       <div class="instructions">
@@ -322,10 +444,10 @@
       </div>
     </div>
 
-    <!-- Game Over Screen with Simulated Ad Slots -->
+    <!-- Game Over Screen with Simulated Ad Slots & Share -->
     <div id="gameover-screen" class="screen-overlay">
-      <h1 class="title" style="font-size: 30px; margin-bottom: 4px;">Orbit Decayed</h1>
-      <p class="subtitle" style="margin-bottom: 14px;">SIGNAL LOST IN SINGULARITY</p>
+      <h1 class="title" style="font-size: 28px; margin-bottom: 2px;">Orbit Decayed</h1>
+      <p class="subtitle" style="margin-bottom: 12px;" id="gameover-subtitle">SIGNAL LOST IN SINGULARITY</p>
 
       <div class="stats-card">
         <div class="stats-box">
@@ -333,28 +455,45 @@
           <span id="gameover-score" class="stats-num" style="color: #38bdf8;">0</span>
         </div>
         <div class="stats-box">
-          <span class="stats-title">Best Record</span>
+          <span class="stats-title">Multiplier</span>
+          <span id="gameover-mult" class="stats-num" style="color: #a855f7;">x1</span>
+        </div>
+        <div class="stats-box">
+          <span class="stats-title" id="gameover-best-label">Best Record</span>
           <span id="gameover-best" class="stats-num" style="color: #f43f5e;">0</span>
         </div>
       </div>
+
+      <!-- One-Click Viral Emoji Score Share -->
+      <button id="btn-share" class="btn btn-share" type="button">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+          <polyline points="16 6 12 2 8 6"/>
+          <line x1="12" y1="2" x2="12" y2="15"/>
+        </svg>
+        <span id="btn-share-text">Share Score 📋</span>
+      </button>
 
       <!-- Rewarded Ad Call-to-action Button -->
       <button id="btn-revive" class="btn btn-rewarded">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
           <path d="M8 5v14l11-7z"/>
         </svg>
-        <span>Revive with Extra Life (Watch Ad)</span>
+        <span>Revive Probe (Watch Ad)</span>
       </button>
 
-      <button id="btn-retry" class="btn" style="margin-top: 6px;">Deploy New Probe</button>
+      <button id="btn-retry" class="btn" style="margin-top: 4px; padding: 11px 32px; font-size: 14px; width: 100%; max-width: 320px;">Deploy New Probe</button>
 
       <!-- Simulated Ad Display Slot (AdSense / CrazyGames / Poki H5 Ad) -->
-      <div class="ad-container">
+      <div class="ad-container" style="height: 100px; margin: 12px 0 0 0;">
         <span class="ad-badge">ADVERTISEMENT</span>
         <span class="ad-text">Responsive Ad Slot</span>
-        <span class="ad-subtext">300x120 Banner // H5 Monetization Ready</span>
+        <span class="ad-subtext">300x100 Banner // H5 Monetization Ready</span>
       </div>
     </div>
+
+    <!-- Toast Notification -->
+    <div id="copy-toast">Score copied to clipboard! 📋</div>
   </div>
 
   <script>
@@ -487,14 +626,26 @@
     // UI references
     const hudScore = document.getElementById('hud-score');
     const hudBest = document.getElementById('hud-best');
+    const hudBestLabel = document.getElementById('hud-best-label');
     const hudMult = document.getElementById('hud-mult');
+    const hudModeBadge = document.getElementById('hud-mode-badge');
     const startScreen = document.getElementById('start-screen');
     const gameoverScreen = document.getElementById('gameover-screen');
     const gameoverScore = document.getElementById('gameover-score');
+    const gameoverMult = document.getElementById('gameover-mult');
     const gameoverBest = document.getElementById('gameover-best');
+    const gameoverBestLabel = document.getElementById('gameover-best-label');
+    const gameoverSubtitle = document.getElementById('gameover-subtitle');
     const btnStart = document.getElementById('btn-start');
     const btnRetry = document.getElementById('btn-retry');
     const btnRevive = document.getElementById('btn-revive');
+    const btnShare = document.getElementById('btn-share');
+    const btnShareText = document.getElementById('btn-share-text');
+    const copyToast = document.getElementById('copy-toast');
+    const tabEndless = document.getElementById('tab-endless');
+    const tabDaily = document.getElementById('tab-daily');
+    const dailyInfoText = document.getElementById('daily-info-text');
+    const dailyDateLabel = document.getElementById('daily-date-label');
 
     let width = 0;
     let height = 0;
@@ -516,22 +667,97 @@
     window.addEventListener('resize', resize);
 
     /* =========================================================
-       GAME STATE & CONFIGURATION
+       DETERMINISTIC PRNG (Mulberry32) FOR DAILY CHALLENGE
        ========================================================= */
+    function getTodayDateString() {
+      const now = new Date();
+      const y = now.getFullYear();
+      const m = String(now.getMonth() + 1).padStart(2, '0');
+      const d = String(now.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    const todayDateStr = getTodayDateString();
+    dailyDateLabel.textContent = todayDateStr;
+
+    // String hash to 32-bit unsigned integer
+    function hashStringToSeed(str) {
+      let hash = 1779033703 ^ str.length;
+      for (let i = 0; i < str.length; i++) {
+        hash = Math.imul(hash ^ str.charCodeAt(i), 3432918353);
+        hash = (hash << 13) | (hash >>> 19);
+      }
+      return (hash >>> 0);
+    }
+
+    let dailyRandomState = hashStringToSeed(todayDateStr);
+
+    function mulberry32() {
+      dailyRandomState |= 0;
+      dailyRandomState = (dailyRandomState + 0x6D2B79F5) | 0;
+      let t = Math.imul(dailyRandomState ^ (dailyRandomState >>> 15), 1 | dailyRandomState);
+      t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    }
+
+    // Swappable RNG function: uses Mulberry32 for Daily, Math.random for Endless
+    let currentRNG = Math.random;
+
+    /* =========================================================
+       GAME MODES & STATE
+       ========================================================= */
+    const MODES = { ENDLESS: 'endless', DAILY: 'daily' };
+    let currentMode = MODES.ENDLESS;
+
     const GAME_STATES = { MENU: 0, PLAYING: 1, GAMEOVER: 2 };
     let gameState = GAME_STATES.MENU;
 
     let score = 0;
     let multiplier = 1;
+    let maxMultiplierReached = 1;
     let multiplierStreak = 0;
-    let highScore = parseInt(localStorage.getItem('echo_orbit_highscore') || '0', 10);
-    hudBest.textContent = highScore;
+    let survivalTime = 0; // In seconds
+
+    let endlessHighScore = parseInt(localStorage.getItem('echo_orbit_highscore') || '0', 10);
+    let dailyHighScore = parseInt(localStorage.getItem(`echo_orbit_daily_${todayDateStr}`) || '0', 10);
+
+    function updateHudRecordDisplay() {
+      if (currentMode === MODES.DAILY) {
+        hudModeBadge.textContent = 'Daily';
+        hudModeBadge.classList.add('daily');
+        hudBestLabel.textContent = 'Daily Best';
+        hudBest.textContent = dailyHighScore;
+      } else {
+        hudModeBadge.textContent = 'Endless';
+        hudModeBadge.classList.remove('daily');
+        hudBestLabel.textContent = 'Best Endless';
+        hudBest.textContent = endlessHighScore;
+      }
+    }
+    updateHudRecordDisplay();
+
+    // Mode tab switching
+    tabEndless.addEventListener('click', () => {
+      currentMode = MODES.ENDLESS;
+      tabEndless.classList.add('active');
+      tabDaily.classList.remove('active', 'daily-active');
+      dailyInfoText.style.display = 'none';
+      updateHudRecordDisplay();
+    });
+
+    tabDaily.addEventListener('click', () => {
+      currentMode = MODES.DAILY;
+      tabDaily.classList.add('active', 'daily-active');
+      tabEndless.classList.remove('active');
+      dailyInfoText.style.display = 'block';
+      updateHudRecordDisplay();
+    });
 
     let screenShake = 0;
     let particles = [];
     let shockwaves = [];
-    let items = []; // Sparks and rings
-    let hazards = []; // Orbiting barrier arcs & asteroids
+    let items = [];
+    let hazards = [];
 
     // Player Orbit Physics
     const player = {
@@ -566,8 +792,19 @@
       if (!keepScore) {
         score = 0;
         multiplier = 1;
+        maxMultiplierReached = 1;
         multiplierStreak = 0;
+        survivalTime = 0;
       }
+
+      if (currentMode === MODES.DAILY) {
+        // Reset PRNG to identical initial daily seed every attempt
+        dailyRandomState = hashStringToSeed(todayDateStr);
+        currentRNG = mulberry32;
+      } else {
+        currentRNG = Math.random;
+      }
+
       player.angle = 0;
       player.radius = (player.minRadius + player.maxRadius) / 2;
       player.radialVelocity = 0;
@@ -580,22 +817,24 @@
       particles = [];
       shockwaves = [];
       difficultyTimer = 0;
+      lastSpawnTime = 0;
 
       hudScore.textContent = score;
       hudMult.textContent = 'x' + multiplier;
+      updateHudRecordDisplay();
     }
 
     function spawnHazard() {
-      const type = Math.random() < 0.6 ? 'arc' : 'mine';
-      const orbitRingRadius = player.minRadius + 30 + Math.random() * (player.maxRadius - player.minRadius - 50);
+      const type = currentRNG() < 0.6 ? 'arc' : 'mine';
+      const orbitRingRadius = player.minRadius + 30 + currentRNG() * (player.maxRadius - player.minRadius - 50);
 
       if (type === 'arc') {
         hazards.push({
           type: 'arc',
           radius: orbitRingRadius,
-          angle: Math.random() * Math.PI * 2,
-          arcLength: 0.5 + Math.random() * 0.45, // Span in radians
-          angularSpeed: (Math.random() - 0.5) * 0.03,
+          angle: currentRNG() * Math.PI * 2,
+          arcLength: 0.5 + currentRNG() * 0.45,
+          angularSpeed: (currentRNG() - 0.5) * 0.03,
           thickness: 9,
           color: '#f43f5e'
         });
@@ -603,8 +842,8 @@
         hazards.push({
           type: 'mine',
           radius: orbitRingRadius,
-          angle: Math.random() * Math.PI * 2,
-          angularSpeed: (Math.random() - 0.5) * 0.02,
+          angle: currentRNG() * Math.PI * 2,
+          angularSpeed: (currentRNG() - 0.5) * 0.02,
           size: 7,
           color: '#f97316'
         });
@@ -612,12 +851,12 @@
     }
 
     function spawnSpark() {
-      const orbitRingRadius = player.minRadius + 20 + Math.random() * (player.maxRadius - player.minRadius - 30);
+      const orbitRingRadius = player.minRadius + 20 + currentRNG() * (player.maxRadius - player.minRadius - 30);
       items.push({
         type: 'spark',
         radius: orbitRingRadius,
-        angle: Math.random() * Math.PI * 2,
-        angularSpeed: (Math.random() - 0.5) * 0.015,
+        angle: currentRNG() * Math.PI * 2,
+        angularSpeed: (currentRNG() - 0.5) * 0.015,
         size: 5,
         color: '#38bdf8'
       });
@@ -626,13 +865,80 @@
     function spawnMultiplierRing() {
       items.push({
         type: 'gate',
-        radius: player.minRadius + 25 + Math.random() * (player.maxRadius - player.minRadius - 40),
-        angle: Math.random() * Math.PI * 2,
+        radius: player.minRadius + 25 + currentRNG() * (player.maxRadius - player.minRadius - 40),
+        angle: currentRNG() * Math.PI * 2,
         angularSpeed: 0.008,
         thickness: 14,
         arcLength: 0.35,
         color: '#a855f7'
       });
+    }
+
+    /* =========================================================
+       ONE-CLICK EMOJI VIRAL SCORE SHARE
+       ========================================================= */
+    function generateScoreShareText() {
+      const modeLabel = currentMode === MODES.DAILY ? `Daily #${todayDateStr}` : 'Classic Endless';
+      const secondsSurvived = Math.floor(survivalTime);
+      
+      // Dynamic colored emoji tier based on score
+      let performanceBar = '⬛⬛⬛⬛⬛';
+      if (score >= 4000) performanceBar = '🟪🟪🟪🟪⚡';
+      else if (score >= 2500) performanceBar = '🟦🟦🟦🟦🟪';
+      else if (score >= 1200) performanceBar = '🟩🟩🟩🟦🟦';
+      else if (score >= 500) performanceBar = '🟨🟨🟩🟩🟩';
+      else if (score > 100) performanceBar = '🟧🟧🟨🟨🟨';
+
+      const playUrl = window.location.href;
+
+      return `🌌 Echo Orbit: [${modeLabel}]\n` +
+             `🏆 Score: ${score} (Multiplier x${maxMultiplierReached})\n` +
+             `⏱️ Survived: ${secondsSurvived}s\n` +
+             `${performanceBar}\n` +
+             `Play: ${playUrl}`;
+    }
+
+    function showToast(msg = 'Score copied to clipboard! 📋') {
+      copyToast.textContent = msg;
+      copyToast.classList.add('show');
+      setTimeout(() => {
+        copyToast.classList.remove('show');
+      }, 2200);
+    }
+
+    btnShare.addEventListener('click', () => {
+      const shareText = generateScoreShareText();
+      
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareText).then(() => {
+          btnShareText.textContent = 'Score Copied! 📋';
+          showToast('Score copied to clipboard! 📋');
+          setTimeout(() => { btnShareText.textContent = 'Share Score 📋'; }, 2000);
+        }).catch(() => {
+          fallbackCopyText(shareText);
+        });
+      } else {
+        fallbackCopyText(shareText);
+      }
+    });
+
+    function fallbackCopyText(text) {
+      const textArea = document.createElement('textarea');
+      textArea.value = text;
+      textArea.style.position = 'fixed';
+      textArea.style.left = '-9999px';
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+      try {
+        document.execCommand('copy');
+        btnShareText.textContent = 'Score Copied! 📋';
+        showToast('Score copied to clipboard! 📋');
+        setTimeout(() => { btnShareText.textContent = 'Share Score 📋'; }, 2000);
+      } catch (err) {
+        showToast('Press and copy score manually');
+      }
+      document.body.removeChild(textArea);
     }
 
     /* =========================================================
@@ -675,17 +981,14 @@
       sound.init();
       sound.playPulse();
 
-      // Apply outward impulse
       player.radialVelocity = Math.max(player.radialVelocity + player.thrustForce, player.thrustForce);
 
-      // Visual ripples & player recoil
       const px = centerX + Math.cos(player.angle) * player.radius;
       const py = centerY + Math.sin(player.angle) * player.radius;
       createShockwave(px, py, 35, '#38bdf8');
       emitParticles(px, py, '#00f0ff', 6, 2.5);
     }
 
-    // Universal pointer & keyboard handling
     window.addEventListener('keydown', (e) => {
       if (e.code === 'Space' || e.code === 'ArrowUp') {
         e.preventDefault();
@@ -711,18 +1014,16 @@
       startGame();
     });
 
-    // Simulated Rewarded Ad trigger (Gives player a second chance)
     btnRevive.addEventListener('click', () => {
       sound.init();
       btnRevive.disabled = true;
       btnRevive.innerText = "Connecting to Ad Stream...";
       setTimeout(() => {
-        // Mock ad completion reward
         gameoverScreen.classList.remove('active');
         gameState = GAME_STATES.PLAYING;
-        resetGame(true); // Revives and preserves prior session score
+        resetGame(true);
         btnRevive.disabled = false;
-        btnRevive.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span>Revive with Extra Life</span>`;
+        btnRevive.innerHTML = `<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg> <span>Revive Probe (Watch Ad)</span>`;
       }, 1400);
     });
 
@@ -744,15 +1045,31 @@
       emitParticles(px, py, '#f43f5e', 45, 6);
       createShockwave(px, py, 110, '#f43f5e');
 
-      // Update High Scores
-      if (score > highScore) {
-        highScore = score;
-        localStorage.setItem('echo_orbit_highscore', highScore.toString());
-        hudBest.textContent = highScore;
+      // Update High Scores depending on mode
+      let recordToDisplay = 0;
+      if (currentMode === MODES.DAILY) {
+        if (score > dailyHighScore) {
+          dailyHighScore = score;
+          localStorage.setItem(`echo_orbit_daily_${todayDateStr}`, dailyHighScore.toString());
+        }
+        recordToDisplay = dailyHighScore;
+        gameoverSubtitle.textContent = `DAILY SEED: ${todayDateStr}`;
+        gameoverBestLabel.textContent = 'Daily Record';
+      } else {
+        if (score > endlessHighScore) {
+          endlessHighScore = score;
+          localStorage.setItem('echo_orbit_highscore', endlessHighScore.toString());
+        }
+        recordToDisplay = endlessHighScore;
+        gameoverSubtitle.textContent = 'SIGNAL LOST IN SINGULARITY';
+        gameoverBestLabel.textContent = 'Endless Record';
       }
 
+      updateHudRecordDisplay();
+
       gameoverScore.textContent = score;
-      gameoverBest.textContent = highScore;
+      gameoverMult.textContent = 'x' + maxMultiplierReached;
+      gameoverBest.textContent = recordToDisplay;
 
       setTimeout(() => {
         gameState = GAME_STATES.GAMEOVER;
@@ -764,13 +1081,11 @@
        MAIN UPDATE & RENDER LOOP
        ========================================================= */
     function update(dt) {
-      // Screen shake decay
       if (screenShake > 0) {
         screenShake *= 0.9;
         if (screenShake < 0.1) screenShake = 0;
       }
 
-      // Update Shockwaves
       for (let i = shockwaves.length - 1; i >= 0; i--) {
         const sw = shockwaves[i];
         sw.currentR += 2.4;
@@ -778,7 +1093,6 @@
         if (sw.alpha <= 0) shockwaves.splice(i, 1);
       }
 
-      // Update Particles
       for (let i = particles.length - 1; i >= 0; i--) {
         const p = particles[i];
         p.x += p.vx;
@@ -787,41 +1101,37 @@
         if (p.life <= 0) particles.splice(i, 1);
       }
 
-      // Singularity core rhythmic breathing
       core.pulseTimer += 0.05;
       core.currentRadius = core.baseRadius + Math.sin(core.pulseTimer) * 2.5;
 
       if (gameState !== GAME_STATES.PLAYING) return;
 
+      survivalTime += dt;
       difficultyTimer += dt;
 
-      // Inward continuous gravitational pull
       player.radialVelocity -= player.inwardGravity;
       player.radius += player.radialVelocity;
       player.angle += player.angularVelocity;
 
-      // Log tail trail
       player.history.push({
         x: centerX + Math.cos(player.angle) * player.radius,
         y: centerY + Math.sin(player.angle) * player.radius
       });
       if (player.history.length > 24) player.history.shift();
 
-      // Check boundary decay crash (too close to black hole or drifted into dark space)
       if (player.radius <= player.minRadius || player.radius >= player.maxRadius + 20) {
         triggerGameOver();
         return;
       }
 
-      // Spawning schedules based on progress
+      // Spawning with current RNG (Deterministic Mulberry32 for Daily, Math.random for Endless)
       if (difficultyTimer - lastSpawnTime > 1.6) {
         lastSpawnTime = difficultyTimer;
-        if (Math.random() < 0.75) spawnHazard();
-        if (Math.random() < 0.85) spawnSpark();
-        if (Math.random() < 0.28) spawnMultiplierRing();
+        if (currentRNG() < 0.75) spawnHazard();
+        if (currentRNG() < 0.85) spawnSpark();
+        if (currentRNG() < 0.28) spawnMultiplierRing();
       }
 
-      // Player coordinates
       const px = centerX + Math.cos(player.angle) * player.radius;
       const py = centerY + Math.sin(player.angle) * player.radius;
 
@@ -831,9 +1141,7 @@
         h.angle += h.angularSpeed;
 
         if (h.type === 'arc') {
-          // Check radial proximity
           if (Math.abs(player.radius - h.radius) < h.thickness / 2 + player.size) {
-            // Check angular intersection
             let diff = (player.angle - h.angle) % (Math.PI * 2);
             if (diff < 0) diff += Math.PI * 2;
             if (diff <= h.arcLength) {
@@ -870,6 +1178,7 @@
 
             if (multiplierStreak % 5 === 0 && multiplier < 8) {
               multiplier++;
+              if (multiplier > maxMultiplierReached) maxMultiplierReached = multiplier;
               hudMult.textContent = 'x' + multiplier;
               sound.playGate();
             }
@@ -888,6 +1197,7 @@
               emitParticles(px, py, '#c084fc', 18, 4);
               score += 50 * multiplier;
               multiplier = Math.min(multiplier + 1, 10);
+              if (multiplier > maxMultiplierReached) maxMultiplierReached = multiplier;
               hudScore.textContent = score;
               hudMult.textContent = 'x' + multiplier;
               items.splice(i, 1);
@@ -901,14 +1211,12 @@
     function draw() {
       ctx.save();
 
-      // Screen Shake translation
       if (screenShake > 0) {
         const shakeX = (Math.random() - 0.5) * screenShake;
         const shakeY = (Math.random() - 0.5) * screenShake;
         ctx.translate(shakeX, shakeY);
       }
 
-      // Clear Canvas
       ctx.clearRect(0, 0, width, height);
 
       // Draw Orbit Guide Tracks (Rings)
@@ -1029,7 +1337,6 @@
         const px = centerX + Math.cos(player.angle) * player.radius;
         const py = centerY + Math.sin(player.angle) * player.radius;
 
-        // Player Outer Glow & Core
         ctx.beginPath();
         ctx.arc(px, py, player.size, 0, Math.PI * 2);
         ctx.fillStyle = '#ffffff';
@@ -1038,7 +1345,6 @@
         ctx.fill();
         ctx.shadowBlur = 0;
 
-        // Direction Vector / Antenna
         ctx.beginPath();
         ctx.moveTo(px, py);
         ctx.lineTo(
@@ -1064,7 +1370,6 @@
       requestAnimationFrame(gameLoop);
     }
 
-    // Initialize layout and launch loop
     window.addEventListener('load', () => {
       resize();
       requestAnimationFrame(gameLoop);
